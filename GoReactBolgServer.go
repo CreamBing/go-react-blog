@@ -1,16 +1,33 @@
 package main
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/kataras/iris"
 	"github.com/kataras/iris/middleware/logger"
 	"github.com/kataras/iris/middleware/recover"
 	. "go-react-blog/config"
+	. "go-react-blog/listener"
 	"os"
 )
+
+type Articles struct {
+	Totol int
+	Dirs []Files
+}
+
+func mapToSlice(m map[string]Files) []Files {
+	s := make([]Files, 0, len(m))
+	for _, v := range m {
+		s = append(s, v)
+	}
+	return s
+}
+
 func main() {
 	fmt.Print("InitConfig...\r")
 	checkErr("InitConfig", InitConfig())
 	fmt.Print("InitConfig Success!!!\n")
+	go SingleDirListener()
 	app := iris.New()
 	app.Use(recover.New())
 	app.Use(logger.New())
@@ -18,7 +35,15 @@ func main() {
 	// 请求方式: GET
 	// 访问地址: http://localhost:8080/welcome
 	app.Handle("GET", "/welcome", func(ctx iris.Context) {
-		ctx.HTML("<h1>Welcome</h1>")
+		filesmap := FILESMAP
+		dirs := mapToSlice(filesmap);
+		articles := Articles{Totol: len(dirs),Dirs: dirs}
+		b, err := json.Marshal(articles)
+		if err != nil {
+			fmt.Println("json.Marshal failed:", err)
+			return
+		}
+		ctx.HTML(string(b))
 	})
 	//输出字符串
 	// 类似于 app.Handle("GET", "/ping", [...])
