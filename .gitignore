@@ -1,29 +1,11 @@
-HELP.md
-/target/
-!.mvn/wrapper/maven-wrapper.jar
+/.idea
 
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
+/go.sum
+/*.exe
+/*.log
+/main
+/go-react-blog
+/go-react-blog.exe
+/test.go
 
-### IntelliJ IDEA ###
-.idea
-*.iws
-*.iml
-*.ipr
-
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
-/build/
-
-### VS Code ###
-.vscode/
+/logs
