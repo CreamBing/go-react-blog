@@ -23,6 +23,7 @@ type Files struct {
 	Date string `yaml:"date"`
 	Author string `yaml:"author"`
 	Tags []string `yaml:"tags"`
+	Path string
 }
 
 var FILESMAP = make(map[int]Files)
@@ -70,6 +71,7 @@ func readFile(filePath string){
 				fmt.Println("error:", err)
 				return
 			}
+			FileConf.Path = filePath;
 			putMap(*FileConf);
 		}
 	}

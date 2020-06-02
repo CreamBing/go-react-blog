@@ -27,8 +27,9 @@ func mapToSlice(m map[int]Files,params dto.BlogCardDto) []Files {
 	}
 	return s
 }
+
 type Articles struct {
-	Totol int
+	Total int
 	Dirs []Files
 }
 
@@ -37,6 +38,15 @@ func ActionBlogCards(ctx iris.Context) {
 	params.Bind(ctx)
 	filesmap := FILESMAP
 	dirs := mapToSlice(filesmap,params);
-	articles := Articles{Totol: len(dirs),Dirs: dirs}
+	articles := Articles{Total: len(dirs),Dirs: dirs}
 	ctx.JSON(iris.Map{"code": 200, "data": articles})
+}
+
+
+
+func ActionBlogDeatail(ctx iris.Context) {
+	var params dto.BlogDetailDto
+	params.Bind(ctx)
+	filesmap := FILESMAP
+	ctx.JSON(iris.Map{"code": 200, "data": filesmap[params.Id]})
 }
