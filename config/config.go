@@ -15,6 +15,7 @@ var (
 //类型里的属性，全是配置文件里的属性
 type conf struct {
 	ServerPort   string `yaml:"server_port"`
+	MonitorPath string `yaml:"monitor_path"`
 }
 
 // 优先从etcd中加载配置，没有则从配置文件中加载配置

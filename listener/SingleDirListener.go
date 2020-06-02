@@ -3,28 +3,41 @@ package listener
 import (
 	"fmt"
 	"github.com/fsnotify/fsnotify"
+	. "go-react-blog/config"
+	"gopkg.in/yaml.v2"
 	"io/ioutil"
+	"path"
+	"path/filepath"
+	"strconv"
+	"strings"
+	"time"
 )
 
 type Files struct {
-	FileName string
-	Path string
+	Id int `yaml:"id"`
+	Alt string `yaml:"alt"`
+	Image string `yaml:"image"`
+	Title string `yaml:"title"`
+	Desc string `yaml:"desc"`
+	Comments bool `yaml:"comments"`
+	Date string `yaml:"date"`
+	Author string `yaml:"author"`
+	Tags []string `yaml:"tags"`
 }
 
-var FILESMAP = make(map[string]Files)
+var FILESMAP = make(map[int]Files)
 
-func putMap(key string){
-	if _, ok := FILESMAP[key]; ok {
+func putMap(fileConf Files){
+	if _, ok := FILESMAP[fileConf.Id]; ok {
 		fmt.Printf("exist");
 	}else{
-		file := Files{key,key};
-		FILESMAP[key] = file;
+		FILESMAP[fileConf.Id] = fileConf;
 	}
 }
 
-func removeMap(key string){
-	if _, ok := FILESMAP[key]; ok {
-		delete(FILESMAP, key)
+func removeMap(id int){
+	if _, ok := FILESMAP[id]; ok {
+		delete(FILESMAP, id)
 	}else{
 		fmt.Printf("not exist");
 	}
@@ -36,14 +49,58 @@ func readFiles(dir string){
 		return
 	}
 	for _, fi := range files {
-		if !fi.IsDir() { // 目录, 递归遍历
-			putMap(fi.Name())
+		if !fi.IsDir() { // 不是目录，开始读取其中的<!-- more -->
+			readFile(path.Join(dir,fi.Name()))
+		}
+	}
+}
+
+func readFile(filePath string){
+	b, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		fmt.Print(err)
+	}
+	str := string(b)
+	if len(str)>0{
+		moreSplit := strings.Split(str,"<!-- more -->")
+		if len(moreSplit)>1{
+			confYaml := moreSplit[0]
+			FileConf := &Files{}
+			if err := yaml.Unmarshal([]byte(confYaml), FileConf); err != nil {
+				fmt.Println("error:", err)
+				return
+			}
+			putMap(*FileConf);
+		}
+	}
+}
+
+func IsNum(s string) bool {
+	_, err := strconv.ParseFloat(s, 64)
+	return err == nil
+}
+
+func putCreateFileMap(createFileMap map[int]string,filePath string){
+	_, fileName := filepath.Split(filePath)
+	fileNameSplit := strings.Split(fileName,"-");
+	if len(fileNameSplit)>1{
+		if IsNum(fileNameSplit[0]){
+			id,err:=strconv.Atoi(fileNameSplit[0])
+			if(err!=nil){
+				fmt.Println("ERROR", err)
+				return
+			}
+			if _, ok := createFileMap[id]; ok {
+				fmt.Printf("exist");
+			}else{
+				createFileMap[id] = filePath;
+			}
 		}
 	}
 }
 
 func SingleDirListener(){
-	var watchDir = "/Users/zhaobing/dev/go/project/tmp"
+	var watchDir = Conf.MonitorPath;
 	readFiles(watchDir)
 	// creates a new file watcher
 	watcher, err := fsnotify.NewWatcher()
@@ -53,24 +110,58 @@ func SingleDirListener(){
 	defer watcher.Close()
 	//
 	done := make(chan bool)
-
 	//
 	go func() {
+		createFileMap := make(map[int]string)
 		for {
+			timer := time.NewTimer(1*time.Second)
 			select {
 			// watch for events
 			case event := <-watcher.Events:
 				if(event.Op==fsnotify.Create){
-					putMap(event.Name)
+					//这里不能直接读文件，因为新增只是一个事件，文件还没有写入完成
+					putCreateFileMap(createFileMap,event.Name);
 				}else if(event.Op==fsnotify.Remove){
-					removeMap(event.Name)
+					_, fileName := filepath.Split(event.Name)
+					fileNameSplit := strings.Split(fileName,"-");
+					if len(fileNameSplit)>1{
+						if IsNum(fileNameSplit[0]){
+							id,err:=strconv.Atoi(fileNameSplit[0])
+							if(err!=nil){
+								fmt.Println("ERROR", err)
+								return
+							}
+							removeMap(id)
+							delete(createFileMap, id)
+						}
+					}
+				}else if(event.Op==fsnotify.Rename){
+					_, fileName := filepath.Split(event.Name)
+					fileNameSplit := strings.Split(fileName,"-");
+					if len(fileNameSplit)>1{
+						if IsNum(fileNameSplit[0]){
+							id,err:=strconv.Atoi(fileNameSplit[0])
+							if(err!=nil){
+								fmt.Println("ERROR", err)
+								return
+							}
+							removeMap(id)
+							delete(createFileMap, id)
+						}
+					}
 				}
 				fmt.Printf("EVENT -> %s:%s\n", event.Op.String(), event.Name)
 				fmt.Printf("EVENT -> %s\n", FILESMAP)
 				// watch for errors
 			case err := <-watcher.Errors:
 				fmt.Println("ERROR", err)
+			case <-timer.C:
+				for key, v := range createFileMap {
+					readFile(v)
+					delete(createFileMap, key)
+				}
 			}
+			timer.Stop()
 		}
 	}()
 
@@ -78,6 +169,6 @@ func SingleDirListener(){
 	if err := watcher.Add(watchDir); err != nil {
 		fmt.Println("ERROR", err)
 	}
-
+	fmt.Println("monitor_path:", watchDir)
 	<-done
 }
