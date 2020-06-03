@@ -151,6 +151,8 @@ func SingleDirListener(){
 							delete(createFileMap, id)
 						}
 					}
+				}else if(event.Op==fsnotify.Write){
+					putCreateFileMap(createFileMap,event.Name);
 				}
 				fmt.Printf("EVENT -> %s:%s\n", event.Op.String(), event.Name)
 				fmt.Printf("EVENT -> %s\n", FILESMAP)

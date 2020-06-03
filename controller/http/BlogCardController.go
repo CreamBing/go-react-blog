@@ -14,12 +14,12 @@ func mapToSlice(m map[int]Files,params dto.BlogCardDto) []Files {
 			start := params.Cur*(size - params.PageSize*params.Cur)+1
 			end := size-(params.Cur-1)*params.PageSize
 			if(end>0&&start>0&&end>=start){
-				for i:=start;i<=end;i++{
+				for i:=end;i>=start;i--{
 					s = append(s, m[i])
 				}
 			}
 			if(end>0&&start<=0){
-				for i:=1;i<=end;i++{
+				for i:=end;i>=1;i--{
 					s = append(s, m[i])
 				}
 			}
