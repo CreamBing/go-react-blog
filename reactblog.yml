@@ -1,5 +1,5 @@
 server_port: 8081
 #windows
-monitor_path: E:\DEV\go\projects\tmp
+#monitor_path: E:\DEV\go\projects\tmp
 #mac
-#monitor_path: /Users/zhaobing/dev/go/project/tmp
+monitor_path: /Users/zhaobing/dev/front/mdSource
