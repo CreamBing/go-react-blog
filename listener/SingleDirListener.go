@@ -79,6 +79,26 @@ func readFile(filePath string){
 	}
 }
 
+func deleteFile(filePath string,createFileMap map[int]string){
+	_, fileName := filepath.Split(filePath)
+	if strings.HasPrefix(fileName,"."){
+		fmt.Printf("hidden files")
+		return
+	}
+	fileNameSplit := strings.Split(fileName,"-");
+	if len(fileNameSplit)>1{
+		if IsNum(fileNameSplit[0]){
+			id,err:=strconv.Atoi(fileNameSplit[0])
+			if(err!=nil){
+				fmt.Println("ERROR", err)
+				return
+			}
+			removeMap(id)
+			delete(createFileMap, id)
+		}
+	}
+}
+
 func IsNum(s string) bool {
 	_, err := strconv.ParseFloat(s, 64)
 	return err == nil
@@ -86,6 +106,10 @@ func IsNum(s string) bool {
 
 func putCreateFileMap(createFileMap map[int]string,filePath string){
 	_, fileName := filepath.Split(filePath)
+	if strings.HasPrefix(fileName,"."){
+		fmt.Printf("hidden files")
+		return
+	}
 	fileNameSplit := strings.Split(fileName,"-");
 	if len(fileNameSplit)>1{
 		if IsNum(fileNameSplit[0]){
@@ -95,7 +119,7 @@ func putCreateFileMap(createFileMap map[int]string,filePath string){
 				return
 			}
 			if _, ok := createFileMap[id]; ok {
-				fmt.Printf("exist");
+				fmt.Printf("exist")
 			}else{
 				createFileMap[id] = filePath;
 			}
@@ -126,33 +150,9 @@ func SingleDirListener(){
 					//这里不能直接读文件，因为新增只是一个事件，文件还没有写入完成
 					putCreateFileMap(createFileMap,event.Name);
 				}else if(event.Op==fsnotify.Remove){
-					_, fileName := filepath.Split(event.Name)
-					fileNameSplit := strings.Split(fileName,"-");
-					if len(fileNameSplit)>1{
-						if IsNum(fileNameSplit[0]){
-							id,err:=strconv.Atoi(fileNameSplit[0])
-							if(err!=nil){
-								fmt.Println("ERROR", err)
-								return
-							}
-							removeMap(id)
-							delete(createFileMap, id)
-						}
-					}
+					deleteFile(event.Name,createFileMap)
 				}else if(event.Op==fsnotify.Rename){
-					_, fileName := filepath.Split(event.Name)
-					fileNameSplit := strings.Split(fileName,"-");
-					if len(fileNameSplit)>1{
-						if IsNum(fileNameSplit[0]){
-							id,err:=strconv.Atoi(fileNameSplit[0])
-							if(err!=nil){
-								fmt.Println("ERROR", err)
-								return
-							}
-							removeMap(id)
-							delete(createFileMap, id)
-						}
-					}
+					deleteFile(event.Name,createFileMap)
 				}else if(event.Op==fsnotify.Write){
 					putCreateFileMap(createFileMap,event.Name);
 				}
