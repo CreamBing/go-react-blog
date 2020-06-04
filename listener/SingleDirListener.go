@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -25,20 +26,20 @@ type Files struct {
 	Tags []string `yaml:"tags"`
 	Path string
 }
+var FILESMAP sync.Map
 
-var FILESMAP = make(map[int]Files)
 
 func putMap(fileConf Files){
-	if _, ok := FILESMAP[fileConf.Id]; ok {
+	if _, ok := FILESMAP.Load(fileConf.Id); ok {
 		fmt.Printf("exist");
 	}else{
-		FILESMAP[fileConf.Id] = fileConf;
+		FILESMAP.Store(fileConf.Id, fileConf)
 	}
 }
 
 func removeMap(id int){
-	if _, ok := FILESMAP[id]; ok {
-		delete(FILESMAP, id)
+	if _, ok := FILESMAP.Load(id); ok {
+		FILESMAP.Delete(id)
 	}else{
 		fmt.Printf("not exist");
 	}
