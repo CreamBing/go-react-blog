@@ -25,6 +25,7 @@ type Files struct {
 	Author string `yaml:"author"`
 	Tags []string `yaml:"tags"`
 	Path string
+	Content string
 }
 var FILESMAP sync.Map
 
@@ -72,7 +73,8 @@ func readFile(filePath string){
 				fmt.Println("error:", err)
 				return
 			}
-			FileConf.Path = filePath;
+			FileConf.Path = filePath
+			FileConf.Content = moreSplit[1]
 			putMap(*FileConf);
 		}
 	}
@@ -156,7 +158,6 @@ func SingleDirListener(){
 					putCreateFileMap(createFileMap,event.Name);
 				}
 				fmt.Printf("EVENT -> %s:%s\n", event.Op.String(), event.Name)
-				fmt.Printf("EVENT -> %s\n", FILESMAP)
 				// watch for errors
 			case err := <-watcher.Errors:
 				fmt.Println("ERROR", err)
