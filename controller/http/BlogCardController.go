@@ -4,6 +4,7 @@ import (
 	"github.com/kataras/iris"
 	. "go-react-blog/listener"
 	"go-react-blog/models/dto"
+	"strings"
 	"sync"
 )
 
@@ -62,4 +63,29 @@ func ActionBlogDeatail(ctx iris.Context) {
 	filesmap := FILESMAP
 	vv,_ := filesmap.Load(params.Id)
 	ctx.JSON(iris.Map{"code": 200, "data": vv})
+}
+
+func ActionSearch(ctx iris.Context) {
+	var params dto.SearchDto
+	params.Bind(ctx)
+	filesmap := FILESMAP
+	search(filesmap,params)
+	ctx.JSON(iris.Map{"code": 200, "data": search(filesmap,params)})
+}
+
+type SearchVo struct {
+	Id int
+	Title string
+}
+
+func search(m sync.Map,params dto.SearchDto) []SearchVo{
+	var result []SearchVo
+	m.Range(func(k, v interface{}) bool {
+		value := v.(Files);
+		if(strings.Contains(value.Title,params.Title)){
+			result=append(result, SearchVo{Id: value.Id,Title: value.Title});
+		}
+		return true
+	})
+	return result
 }

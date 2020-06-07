@@ -21,4 +21,5 @@ func InnerRoute(app *iris.Application) {
 	app.OnErrorCode(iris.StatusNotFound, err404)
 	app.Post("/blogCards", http.ActionBlogCards)
 	app.Post("/blogDetail", http.ActionBlogDeatail)
+	app.Post("/search", http.ActionSearch)
 }
