@@ -8,7 +8,7 @@ import (
 	"sync"
 )
 
-func mapToSlice(m sync.Map,params dto.BlogCardDto) []Files {
+func mapToSlice(m sync.Map,params dto.BlogCardDto) ([]Files,int) {
 	size := 0
 	m.Range(func(_, _ interface{}) bool {
 		size++
@@ -38,7 +38,7 @@ func mapToSlice(m sync.Map,params dto.BlogCardDto) []Files {
 			}
 		}
 	}
-	return s
+	return s,size;
 }
 
 type Articles struct {
@@ -50,8 +50,8 @@ func ActionBlogCards(ctx iris.Context) {
 	var params dto.BlogCardDto
 	params.Bind(ctx)
 	filesmap := FILESMAP
-	dirs := mapToSlice(filesmap,params);
-	articles := Articles{Total: len(dirs),Dirs: dirs}
+	dirs,size := mapToSlice(filesmap,params);
+	articles := Articles{Total: size,Dirs: dirs}
 	ctx.JSON(iris.Map{"code": 200, "data": articles})
 }
 
